@@ -1,4 +1,4 @@
-from itsdangerous import JSONWebSignatureSerializer as Serializer
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from datetime import datetime
 from blog import db, login_manager, app
 from flask_login import UserMixin
@@ -23,7 +23,7 @@ class User(db.Model, UserMixin):
 
     @staticmethod
     def verify_reset_tokekn(token):
-        s = Serializer(app.confi["SECRET_KEY"])
+        s = Serializer(app.config["SECRET_KEY"])
         try:
             user_id = s.loads(token)["user_id"]
         except expression as identifier:

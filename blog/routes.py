@@ -190,7 +190,7 @@ def reset_request():
         return redirect(url_for("home"))
 
     form = RequestResetForm()
-    if fomr.validate_on_submit():
+    if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         send_reset_email(user)
         flash("An email has been sent with instructions to reset your password.")
@@ -201,7 +201,9 @@ def reset_request():
 def send_reset_email(user):
     token = user.get_reset_token()
     msg = Message(
-        "Password Reset Request", sender="noreply@demo.com", recipients=[user.email]
+        "Password Reset Request",
+        sender="noreply@rahjoo-co.ir",
+        recipients=[user.email],
     )
     msg.body = f"""To reset your password visit following link:
     {url_for('reset_token', token=token, _external=True)}
@@ -209,9 +211,11 @@ def send_reset_email(user):
     If you did not make this request then just ignore this mail and no changes will be made.
     """
 
+    mail.send(msg)
+
 
 @app.route("/reset_password/<token>", methods=["GET", "POST"])
-def reset_token():
+def reset_token(token):
     if current_user.is_authenticated:
         return redirect(url_for("home"))
 
@@ -221,4 +225,12 @@ def reset_token():
         return redirect(url_for("reset_request"))
 
     form = ResetPasswordForm()
+    if form.validate_on_submit():
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode(
+            "UTF-8"
+        )
+        user.password = hashed_password
+        db.session.commit()
+        flash(f"Your password has been updated", "success")
+        return redirect(url_for("login"))
     return render_template("reset_token.html", title="Reset Password", form=form)
